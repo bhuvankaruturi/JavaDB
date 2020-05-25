@@ -113,6 +113,19 @@ public class LeafPage extends Page {
     }
 
     /**
+     * deletes cells at specified index
+     * @param index of the cell to be deleted
+     * @param mode 0 to delete cell completely, 1 to not delete the key
+     * @throws IOException while accessing tableFile
+     */
+    public void deleteCell(int index, int mode) throws IOException {
+        int offset = tableCells.get(index).offset;
+        LeafCell cell = new LeafCell(getStart() + offset, tableFile);
+        if(!cell.deleted) cell.delete(offset + getStart(), tableFile, mode);
+        updateHeaderOnCellDeletion(index);
+    }
+
+    /**
      * deletes cells specified of indices from and to
      * @param from start point of cell deletion
      * @param to end point of cell deletion
@@ -120,10 +133,7 @@ public class LeafPage extends Page {
      */
     void deleteCells(int from, int to) throws IOException {
         for (int i = to-1; i >= from; i--) {
-            int offset = tableCells.get(i).offset;
-            LeafCell cell = new LeafCell(getStart() + offset, tableFile);
-            if(!cell.deleted) cell.delete(offset + getStart(), tableFile, 0);
-            updateHeaderOnCellDeletion(i);
+            deleteCell(i, 0);
         }
     }
 
@@ -138,12 +148,23 @@ public class LeafPage extends Page {
     }
 
     /**
+     * @return next leaf page
+     * @throws IOException while accessing tableFile
+     */
+    public LeafPage getNextPage() throws IOException {
+        if (nextNode != -1)
+            return new LeafPage(nextNode, pageSize, tableFile);
+        return null;
+    }
+
+    /**
      * @return int - max key/rowId in the tableFile
      * @throws IOException while accessing tableFile
      */
     int getMaxRowId() throws IOException {
-        if (nextNode != -1)
-            return new LeafPage(nextNode, pageSize, tableFile).getMaxRowId();
+        LeafPage nextPage = getNextPage();
+        if (nextPage != null)
+            return getNextPage().getMaxRowId();
         else {
             if (cellCount == 0) return 0;
             else return new LeafCell(getStart() + tableCells.get(cellCount-1).offset, tableFile).key;

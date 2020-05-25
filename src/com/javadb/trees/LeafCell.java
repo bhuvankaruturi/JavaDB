@@ -1,5 +1,8 @@
 package com.javadb.trees;
 
+import com.javadb.types.DataType;
+import com.javadb.types.Value;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -7,9 +10,24 @@ import java.nio.ByteBuffer;
 public class LeafCell extends Cell {
     short payloadSize;
     byte numCols;
-    byte[] serialCodes;
-    byte[] columnData;
+    Value[] values;
     boolean deleted;
+
+    public short getPayloadSize() {
+        return payloadSize;
+    }
+
+    public byte getNumCols() {
+        return numCols;
+    }
+
+    public Value[] getValues() {
+        return values;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
 
     // constructor
     public LeafCell(int key) {
@@ -17,11 +35,10 @@ public class LeafCell extends Cell {
     }
 
     // constructor
-    public LeafCell(int key, short payloadSize, byte numCols, byte[] serialCodes, byte[] columnData, boolean deleted) {
+    public LeafCell(int key, short payloadSize, byte numCols, Value[] values, boolean deleted) {
         this.payloadSize = payloadSize;
         this.numCols = numCols;
-        this.serialCodes = serialCodes;
-        this.columnData = columnData;
+        this.values = values;
         this.deleted = deleted;
     }
 
@@ -33,10 +50,23 @@ public class LeafCell extends Cell {
         if (payloadSize == 0) deleted = true;
         key = tableFile.readInt();
         numCols = tableFile.readByte();
-        serialCodes = new byte[numCols];
-        tableFile.read(serialCodes);
-        columnData = new byte[payloadSize];
-        tableFile.read(columnData);
+        values = new Value[numCols];
+        for (int i = 0; i < numCols; i++) {
+            byte serialCode = tableFile.readByte();
+            DataType type = null;
+            for (DataType t: DataType.values()) {
+                if (t.getSerialCode() == serialCode) {
+                    type = t;
+                    break;
+                }
+            }
+            assert type != null;
+            int size = type.getSerialCode() == 0x0C ? serialCode - 0x0C : type.getSerialCode();
+            values[i] = new Value(new byte[size], type);
+        }
+        for (int i = 0; i < numCols; i++) {
+            tableFile.read(values[i].getData());
+        }
     }
 
     /**
@@ -45,7 +75,7 @@ public class LeafCell extends Cell {
     public String toString() {
         ByteBuffer byteBuffer = ByteBuffer.allocate(payloadSize);
         for (int i = 0; i < payloadSize; i++) {
-            byteBuffer.put(columnData[i]);
+            byteBuffer.put(values[i].getData());
         }
         return new String(byteBuffer.array());
     }
@@ -67,8 +97,12 @@ public class LeafCell extends Cell {
         tableFile.writeShort(payloadSize);
         tableFile.writeInt(key);
         tableFile.writeByte(numCols);
-        tableFile.write(serialCodes);
-        tableFile.write(columnData);
+        for (int i = 0; i < numCols; i++) {
+            tableFile.write(values[i].getType().getSerialCode());
+        }
+        for (int i = 0; i < numCols; i++) {
+            tableFile.write(values[i].getData());
+        }
     }
 
     /**

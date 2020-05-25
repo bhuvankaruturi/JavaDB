@@ -10,7 +10,7 @@ public class BPlusTree {
      * @param pageSize is the size of the page in the table
      * @param tableFile is the RandomAccessFile object of the .tbl file
      */
-    BPlusTree(long pageSize, RandomAccessFile tableFile) throws IOException  {
+    public BPlusTree(long pageSize, RandomAccessFile tableFile) throws IOException  {
         int type = 0;
         if (tableFile.length() > 0) {
             tableFile.seek(0);

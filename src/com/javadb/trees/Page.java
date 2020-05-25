@@ -9,12 +9,12 @@ public abstract class Page {
     protected final RandomAccessFile tableFile;
     int pageNumber;
     long pageSize;
-    byte pageType;
+    public byte pageType;
     short cellCount;
     short cellContentBegin;
-    int nextNode;
+    public int nextNode;
     int parentNode;
-    ArrayList<TableCell> tableCells = new ArrayList<>();
+    public ArrayList<TableCell> tableCells = new ArrayList<>();
 
     /**
      * Creates a page instance from contents of page at pageNumber in tableFile
