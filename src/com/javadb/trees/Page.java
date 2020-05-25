@@ -1,9 +1,8 @@
-package com.bhuvan.trees;
+package com.javadb.trees;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.List;
 
 public abstract class Page {
     final static int headerLength = 16;

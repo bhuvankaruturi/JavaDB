@@ -1,4 +1,4 @@
-package com.bhuvan.trees;
+package com.javadb.trees;
 
 import org.jetbrains.annotations.NotNull;
 

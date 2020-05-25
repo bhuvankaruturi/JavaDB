@@ -1,4 +1,4 @@
-package com.bhuvan.trees;
+package com.javadb.trees;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

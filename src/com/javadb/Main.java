@@ -1,4 +1,4 @@
-package com.bhuvan;
+package com.javadb;
 
 public class Main {
 
