@@ -138,12 +138,23 @@ public class LeafPage extends Page {
     }
 
     /**
+     * @return next leaf page
+     * @throws IOException while accessing tableFile
+     */
+    public LeafPage getNextPage() throws IOException {
+        if (nextNode != -1)
+            return new LeafPage(nextNode, pageSize, tableFile);
+        return null;
+    }
+
+    /**
      * @return int - max key/rowId in the tableFile
      * @throws IOException while accessing tableFile
      */
     int getMaxRowId() throws IOException {
-        if (nextNode != -1)
-            return new LeafPage(nextNode, pageSize, tableFile).getMaxRowId();
+        LeafPage nextPage = getNextPage();
+        if (nextPage != null)
+            return getNextPage().getMaxRowId();
         else {
             if (cellCount == 0) return 0;
             else return new LeafCell(getStart() + tableCells.get(cellCount-1).offset, tableFile).key;
