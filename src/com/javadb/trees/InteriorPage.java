@@ -30,6 +30,19 @@ public class InteriorPage extends Page {
     }
 
     /**
+     * read the cells from tableFile and adds them to cells list
+     * @throws IOException while accessing tableFile
+     */
+    void setCells() throws IOException {
+        tableFile.seek(getStart() + headerLength);
+        for (int i = 0; i < cellCount; i++) {
+            short offset = tableFile.readShort();
+            TableCell tableCell = new TableCell(new InteriorCell(offset + getStart(), tableFile), offset);
+            tableCells.add(tableCell);
+        }
+    }
+
+    /**
      * InteriorPage's implementation of insert
      * @param cell to be insert
      * @return new sibling in case of overflow, null otherwise
@@ -39,8 +52,8 @@ public class InteriorPage extends Page {
         int i;
         InteriorCell iCell = null;
         for (i = 0; i < cellCount; i++) {
-            iCell = new InteriorCell(cellOffsets.get(0) + getStart(), tableFile);
-            if (cell.compare(iCell) <= 0) {
+            iCell = new InteriorCell(tableCells.get(0).offset + getStart(), tableFile);
+            if (cell.compareTo(iCell) <= 0) {
                 break;
             }
             iCell = null;
@@ -56,6 +69,16 @@ public class InteriorPage extends Page {
             return addChild(new InteriorCell(nextNode, lowestChildKey), newChild.pageNumber);
         }
         return null;
+    }
+
+    /**
+     * @return the left most leaf node
+     * @throws IOException while accessing the node
+     */
+    @Override
+    LeafPage getFirstLeafPage() throws IOException {
+        InteriorCell iCell = new InteriorCell(tableCells.get(0).offset + getStart(), tableFile);
+        return getChildPage(iCell.leftChild).getFirstLeafPage();
     }
 
     /**
@@ -85,39 +108,37 @@ public class InteriorPage extends Page {
             int from = (cellCount + 1) / 2 + 1;
             int to = cellCount;
             if (isRoot()) {
-                Page lPage = new InteriorPage(-1, pageSize, tableFile, 0);
-                Page rPage = new InteriorPage(-1, pageSize, tableFile, 0);
-                lPage.setNextNode(new InteriorCell(cellOffsets.get(from - 1) + getStart(), tableFile).leftChild);
-                rPage.setNextNode(newChildPageNumber);
-                return handleRootOverflow(lPage, rPage, from, to, cell);
+                return handleRootOverflow(from, to, cell, newChildPageNumber);
             } else {
                 Page newPage = new InteriorPage(-1, pageSize, tableFile, parentNode);
                 copyCells(from, to, newPage);
                 newPage.addCell(cell);
-                setNextNode(new InteriorCell(cellOffsets.get(from-1) + getStart(), tableFile).leftChild);
+                setNextNode(new InteriorCell(tableCells.get(from-1).offset + getStart(), tableFile).leftChild);
                 newPage.setNextNode(newChildPageNumber);
                 deleteCells(from - 1, to - 1);
                 return newPage;
             }
         }
-        int offset = cellContentBegin - cell.size();
+        short offset = (short) (cellContentBegin - cell.size());
         cell.save(offset + getStart(), tableFile);
-        updateHeaderOnCellAddition(offset);
+        updateHeaderOnCellAddition(new TableCell(cell, offset));
         setNextNode(newChildPageNumber);
         return null;
     }
 
     /**
-     * override's Page's handleRootOverflow method
-     * @param lPage is the left child
-     * @param rPage is the right child
+     * overloads Page's handleRootOverflow method
      * @param from is the start index of the cells to be copied to rPage
      * @param to is the end index of the cells to be copied to rPage
      * @param newCell new cell to be added to rPage, which is causing the overflow
      * @return new root node
      * @throws IOException while accessing tableFile
      */
-    Page handleRootOverflow(Page lPage, Page rPage, int from, int to, Cell newCell) throws IOException {
+    Page handleRootOverflow(int from, int to, Cell newCell, int newChildPageNumber) throws IOException {
+        Page lPage = new InteriorPage(-1, pageSize, tableFile, 0);
+        Page rPage = new InteriorPage(-1, pageSize, tableFile, 0);
+        lPage.setNextNode(new InteriorCell(tableCells.get(from - 1).offset + getStart(), tableFile).leftChild);
+        rPage.setNextNode(newChildPageNumber);
         copyCells(0, from - 1, lPage);
         copyCells(from, to, rPage);
         rPage.addCell(newCell);
@@ -142,7 +163,7 @@ public class InteriorPage extends Page {
      */
     void copyCells(int from, int to, Page page) throws IOException {
         for (int i = from; i < to; i++) {
-            Cell cell = new InteriorCell(cellOffsets.get(i) + getStart(), tableFile);
+            Cell cell = new InteriorCell(tableCells.get(i).offset + getStart(), tableFile);
             page.addCell(cell);
         }
     }
@@ -155,13 +176,13 @@ public class InteriorPage extends Page {
      */
     void deleteCells(int from, int to) throws IOException {
         for (int i = to-1; i >= from; i--) {
-            int offset = cellOffsets.get(i);
+            short offset = tableCells.get(i).offset;
             int size = new InteriorCell(offset, tableFile).size();
             tableFile.seek(getStart() + offset);
             for (int j = 0; j < size; j++) {
                 tableFile.writeByte(0x00);
             }
-            cellOffsets.remove(i);
+            tableCells.remove(i);
             cellCount--;
         }
     }
@@ -173,7 +194,7 @@ public class InteriorPage extends Page {
     int getLowestKey() throws IOException {
         if (cellCount <= 0)
             return -1;
-        InteriorCell iCell =  new InteriorCell(cellOffsets.get(0) + getStart(), tableFile);
+        InteriorCell iCell =  new InteriorCell(tableCells.get(0).offset + getStart(), tableFile);
         return getChildPage(iCell.leftChild).getLowestKey();
     }
 
@@ -183,5 +204,16 @@ public class InteriorPage extends Page {
      */
     int getMaxRowId() throws IOException {
         return getChildPage(nextNode).getMaxRowId();
+    }
+
+    @Override
+    public LeafCell getWithKey(int key) throws IOException {
+        for (TableCell tableCell: tableCells) {
+            if (tableCell.cell.key > key) {
+                InteriorCell iCell = (InteriorCell) tableCell.cell;
+                return getChildPage(iCell.leftChild).getWithKey(key);
+            }
+        }
+        return getChildPage(nextNode).getWithKey(key);
     }
 }

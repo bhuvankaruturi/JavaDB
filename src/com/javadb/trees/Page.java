@@ -14,8 +14,7 @@ public abstract class Page {
     short cellContentBegin;
     int nextNode;
     int parentNode;
-    ArrayList<Short> cellOffsets = new ArrayList<>();
-
+    ArrayList<TableCell> tableCells = new ArrayList<>();
 
     /**
      * Creates a page instance from contents of page at pageNumber in tableFile
@@ -29,7 +28,7 @@ public abstract class Page {
         this.tableFile = tableFile;
         this.pageNumber = pageNumber;
         setHeader();
-        setCellOffsets();
+        setCells();
     }
 
     /**
@@ -85,17 +84,6 @@ public abstract class Page {
     }
 
     /**
-     * read the offsets of cells in the page from tableFile
-     * @throws IOException while accessing tableFile
-     */
-    void setCellOffsets() throws IOException {
-        tableFile.seek(getStart() + headerLength);
-        for (int i = 0; i < cellCount; i++) {
-            cellOffsets.add((short) tableFile.readUnsignedShort());
-        }
-    }
-
-    /**
      * @return long - location of start of the page (i.e pageSize * pageNumber)
      */
     long getStart() {
@@ -106,7 +94,7 @@ public abstract class Page {
      * @return boolean - true if the page is root node
      */
     boolean isRoot() {
-        return parentNode == -1;
+        return parentNode == -1 && pageNumber == 0;
     }
 
     /**
@@ -115,25 +103,25 @@ public abstract class Page {
      * @throws IOException while accessing tableFile
      */
     void addCell(Cell cell) throws IOException {
-        int offset = cellContentBegin - cell.size();
+        short offset = (short) (cellContentBegin - cell.size());
         cell.save(getStart() + offset, tableFile);
-        updateHeaderOnCellAddition(offset);
+        updateHeaderOnCellAddition(new TableCell(cell, offset));
     }
 
     /**
      * Update the header of page when a cell is inserted
-     * @param offset location of new cell in the page
+     * @param tableCell is the new cell that was added
      * @throws IOException while accessing tableFile
      */
-    void updateHeaderOnCellAddition(int offset) throws IOException {
+    protected void updateHeaderOnCellAddition(TableCell tableCell) throws IOException {
         tableFile.seek(getStart() + 2);
         cellCount++;
         tableFile.writeShort(cellCount);
-        tableFile.writeShort(offset);
-        cellContentBegin = (short) offset;
+        tableFile.writeShort(tableCell.offset);
+        cellContentBegin = tableCell.offset;
         tableFile.seek(getStart() + headerLength + (cellCount-1) * 2);
-        tableFile.writeShort(offset);
-        cellOffsets.add((short) offset);
+        tableFile.writeShort(tableCell.offset);
+        tableCells.add(tableCell);
     }
 
     /**
@@ -146,12 +134,12 @@ public abstract class Page {
         cellCount--;
         tableFile.writeShort(cellCount);
 
-        if (cellCount > 0) cellContentBegin = cellOffsets.get(cellIndex-1);
+        if (cellCount > 0) cellContentBegin = tableCells.get(cellIndex-1).offset;
         else cellContentBegin = (short) pageSize;
         tableFile.writeShort(cellContentBegin == pageSize ? 0 : cellContentBegin);
         tableFile.seek(getStart() + headerLength + cellCount * 2);
         tableFile.writeShort(0x00);
-        cellOffsets.remove(cellIndex);
+        tableCells.remove(cellIndex);
     }
 
     /**
@@ -197,9 +185,12 @@ public abstract class Page {
     }
 
     /* abstract methods */
+    abstract void setCells() throws IOException;
     abstract Page insert(Cell cell) throws IOException;
+    abstract LeafPage getFirstLeafPage() throws IOException;
     abstract int getLowestKey() throws IOException;
     abstract void copyCells(int from, int to, Page page) throws IOException;
     abstract int getFreeSpace();
     abstract int getMaxRowId() throws IOException;
+    public abstract LeafCell getWithKey(int key) throws IOException;
 }

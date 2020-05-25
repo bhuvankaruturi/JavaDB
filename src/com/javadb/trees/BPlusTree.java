@@ -38,4 +38,21 @@ public class BPlusTree {
             root = result;
         }
     }
+
+    /**
+     * @param key key to be searched for
+     * @return the cell with key value specified by @param key
+     * @throws IOException while accessing tableFile
+     */
+    public LeafCell getWithKey(int key) throws IOException {
+        return root.getWithKey(key);
+    }
+
+    /**
+     * @return the first leaf page from left in the tree
+     * @throws IOException while accessing the tableFile
+     */
+    public LeafPage getFirstLeafPage() throws IOException {
+        return root.getFirstLeafPage();
+    }
 }

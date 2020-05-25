@@ -2,6 +2,7 @@ package com.javadb.trees;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Collections;
 
 public class LeafPage extends Page {
     // leaf page is identified with 13
@@ -30,6 +31,19 @@ public class LeafPage extends Page {
     }
 
     /**
+     * read the cells from tableFile and adds them to cells list
+     * @throws IOException while accessing tableFile
+     */
+    void setCells() throws IOException {
+        tableFile.seek(getStart() + headerLength);
+        for (int i = 0; i < cellCount; i++) {
+            short offset = tableFile.readShort();
+            TableCell tableCell = new TableCell(new LeafCell(offset + getStart(), tableFile), offset);
+            tableCells.add(tableCell);
+        }
+    }
+
+    /**
      * LeafPage's implementation of insert
      * @param cell to be insert
      * @return new sibling in case of overflow, null otherwise
@@ -40,11 +54,7 @@ public class LeafPage extends Page {
             int from = (cellCount + 1) / 2;
             int to = cellCount;
             if (isRoot()) {
-                Page lPage = new LeafPage(-1, pageSize, tableFile, 0);
-                Page rPage = new LeafPage(-1, pageSize, tableFile, 0);
-                rPage.setNextNode(nextNode);
-                lPage.setNextNode(rPage.pageNumber);
-                return handleRootOverflow(lPage, rPage, from, to, cell);
+                return handleRootOverflow(from, to, cell);
             } else {
                 Page newPage = new LeafPage(-1, pageSize, tableFile, parentNode);
                 copyCells(from, to, newPage);
@@ -58,6 +68,28 @@ public class LeafPage extends Page {
         addCell(cell);
         return null;
     }
+
+    @Override
+    LeafPage getFirstLeafPage() {
+        return this;
+    }
+
+    /**
+     * handles overflow while insertion if current node is the root
+     * @param from is the start index of the cells to be copied to rPage
+     * @param to is the end index of the cells to be copied to rPage
+     * @param cell new cell to be added to rPage, which is causing the overflow
+     * @return new root page
+     * @throws IOException while accessing tableFile
+     */
+    Page handleRootOverflow(int from, int to, Cell cell) throws IOException {
+        Page lPage = new LeafPage(-1, pageSize, tableFile, 0);
+        Page rPage = new LeafPage(-1, pageSize, tableFile, 0);
+        rPage.setNextNode(nextNode);
+        lPage.setNextNode(rPage.pageNumber);
+        return handleRootOverflow(lPage, rPage, from, to, cell);
+    }
+
 
     /**
      * @return int - free space in bytes available in the page
@@ -75,7 +107,7 @@ public class LeafPage extends Page {
      */
     void copyCells(int from, int to, Page page) throws IOException {
         for (int i = from; i < to; i++) {
-            Cell cell = new LeafCell(cellOffsets.get(i) + getStart(), tableFile);
+            Cell cell = new LeafCell(tableCells.get(i).offset + getStart(), tableFile);
             page.addCell(cell);
         }
     }
@@ -88,7 +120,7 @@ public class LeafPage extends Page {
      */
     void deleteCells(int from, int to) throws IOException {
         for (int i = to-1; i >= from; i--) {
-            int offset = cellOffsets.get(i);
+            int offset = tableCells.get(i).offset;
             LeafCell cell = new LeafCell(getStart() + offset, tableFile);
             if(!cell.deleted) cell.delete(offset + getStart(), tableFile, 0);
             updateHeaderOnCellDeletion(i);
@@ -102,7 +134,7 @@ public class LeafPage extends Page {
     int getLowestKey() throws IOException {
         if (cellCount <= 0)
             return -1;
-        return new LeafCell(cellOffsets.get(0) + getStart(), tableFile).key;
+        return new LeafCell(tableCells.get(0).offset + getStart(), tableFile).key;
     }
 
     /**
@@ -114,7 +146,15 @@ public class LeafPage extends Page {
             return new LeafPage(nextNode, pageSize, tableFile).getMaxRowId();
         else {
             if (cellCount == 0) return 0;
-            else return new LeafCell(getStart() + cellOffsets.get(cellCount-1), tableFile).key;
+            else return new LeafCell(getStart() + tableCells.get(cellCount-1).offset, tableFile).key;
         }
+    }
+
+    @Override
+    public LeafCell getWithKey(int key) throws IOException {
+        TableCell tableCell = new TableCell(new LeafCell(key), (short) -1);
+        int index = Collections.binarySearch(tableCells, tableCell);
+        if (index < 0) return null;
+        else return (LeafCell) tableCells.get(index).cell;
     }
 }

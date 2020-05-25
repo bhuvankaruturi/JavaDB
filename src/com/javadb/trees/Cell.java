@@ -1,13 +1,20 @@
 package com.javadb.trees;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public abstract class Cell {
+public abstract class Cell implements Comparable<Cell> {
+    // key
     int key = 0;
 
-    int compare(Cell cell) {
-        return this.key - cell.key;
+    // constructor
+    Cell() {}
+
+    @Override
+    public int compareTo(@NotNull Cell c) {
+        return key - c.key;
     }
 
     // abstract methods
