@@ -6,13 +6,14 @@ import com.javadb.parsers.InsertQueryParser;
 import com.javadb.queries.InsertQuery;
 import com.javadb.tables.Table;
 import com.javadb.trees.LeafCell;
+import com.javadb.types.DataType;
 import com.javadb.types.TableColumn;
 import com.javadb.types.Value;
 
 public class InsertQueryProcessor {
     InsertQuery insertQuery;
 
-    InsertQueryProcessor(String insertStatement) {
+    public InsertQueryProcessor(String insertStatement) {
         this.insertQuery = InsertQueryParser.parse(insertStatement);
         process();
     }
@@ -48,6 +49,7 @@ public class InsertQueryProcessor {
                 System.out.println("Invalid primary key provided.");
             }
             catch(Exception e) {
+                e.printStackTrace();
                 System.out.println("Something went wrong while processing the insert query");
             }
         }
@@ -56,6 +58,11 @@ public class InsertQueryProcessor {
     protected static Value[] getValues(String[] sVals, TableColumn[] columns) {
         Value[] values = new Value[columns.length];
         for (int i = 0; i < columns.length; i++) {
+            if (sVals.length-1 < i && !columns[i].isNullable()) return null;
+            else if (sVals.length-1 < i) {
+                values[i] = new Value(new byte[0], DataType.NULL);
+                continue;
+            }
             byte[] arr = columns[i].getDataType().stringToByteArr(sVals[i]);
             if (arr == null) return null;
             else values[i] = new Value(arr, columns[i].getDataType());

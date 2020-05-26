@@ -35,8 +35,13 @@ public class InteriorPage extends Page {
      */
     void setCells() throws IOException {
         tableFile.seek(getStart() + headerLength);
+        short[] cellOffsets = new short[cellCount];
         for (int i = 0; i < cellCount; i++) {
-            short offset = tableFile.readShort();
+            cellOffsets[i] = tableFile.readShort();
+        }
+
+        for (int i = 0; i < cellCount; i++) {
+            short offset = cellOffsets[i];
             TableCell tableCell = new TableCell(new InteriorCell(offset + getStart(), tableFile), offset);
             tableCells.add(tableCell);
         }

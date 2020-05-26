@@ -25,7 +25,7 @@ public class Table {
     // if the table file is not present
     public Table(String tableName) throws IOException {
         this.tableName = tableName;
-        this.tableFile = FileHandler.open(tableName, extension);
+        this.tableFile = FileHandler.open(tableName);
         assert tableFile != null;
         this.tree = new BPlusTree(pageSize, tableFile);
     }

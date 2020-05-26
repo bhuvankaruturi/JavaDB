@@ -57,6 +57,7 @@ public class CreateQueryProcessor {
                     System.out.println("Table " + createQuery.getTableName() + " is already present");
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 System.out.println("Something went wrong while processing create query");
             }
         }
@@ -72,7 +73,7 @@ public class CreateQueryProcessor {
         }
         String constraint = createQuery.getConstraints()[i];
         String isNullable = "YES";
-        if (constraint.toLowerCase().equals("not null"))
+        if (constraint.toLowerCase().trim().contains("not null") || i == 0)
             isNullable = "NO";
         String[] sVals = {"" + key, tableName, columnName, columnType, "" + i, isNullable};
         TableColumn[] columns = new TableColumn[sVals.length];

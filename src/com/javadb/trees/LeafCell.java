@@ -61,8 +61,10 @@ public class LeafCell extends Cell {
                     break;
                 }
             }
+            if (type == null && serialCode > 0x0C)
+                    type = DataType.TEXT;
             assert type != null;
-            int size = type.getSerialCode() == 0x0C ? serialCode - 0x0C : type.getSerialCode();
+            int size = type.getSerialCode() == 0x0C ? serialCode - 0x0C : type.getSize("");
             values[i] = new Value(new byte[size], type);
         }
         for (int i = 0; i < numCols; i++) {
@@ -99,7 +101,9 @@ public class LeafCell extends Cell {
         tableFile.writeInt(key);
         tableFile.writeByte(numCols);
         for (int i = 0; i < numCols; i++) {
-            tableFile.write(values[i].getType().getSerialCode());
+            int serialCode = values[i].getType().getSerialCode();
+            if (serialCode == 0x0C) serialCode += values[i].getSize();
+            tableFile.write(serialCode);
         }
         for (int i = 0; i < numCols; i++) {
             tableFile.write(values[i].getData());

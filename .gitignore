@@ -25,3 +25,6 @@ hs_err_pid*
 # IntelliJ Idea
 *.iml
 .idea/
+
+# data folder
+data/

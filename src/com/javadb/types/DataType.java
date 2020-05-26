@@ -3,6 +3,7 @@ package com.javadb.types;
 import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 public enum DataType {
@@ -41,7 +42,7 @@ public enum DataType {
 
     public short getSize(String data) {
         if (serialCode == 0x0C) {
-            return (short) (0x0C + data.length());
+            return (short) (data.length());
         }
         return size;
     }
@@ -52,11 +53,8 @@ public enum DataType {
 
     public byte[] stringToByteArr(String data) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(this.getSize(data));
-        if (this.getSerialCode() > 0x0C) {
+        if (this.getSerialCode() == 0x0C) {
             byteBuffer.put(data.getBytes());
-        }
-        else if (this.getSerialCode() == 0x0C) {
-            byteBuffer.put("null".getBytes());
         }
         else {
             try {
@@ -111,7 +109,9 @@ public enum DataType {
     }
 
     String byteArrToString(byte[] arr) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(arr);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(getSize(new String(arr)));
+        byteBuffer.put(arr);
+        byteBuffer.position(0);
         switch(getSerialCode()) {
             case 0x00:
                 return "null";

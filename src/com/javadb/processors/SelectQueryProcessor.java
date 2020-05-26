@@ -1,6 +1,7 @@
 package com.javadb.processors;
 
 import com.javadb.catalog.DatabaseColumns;
+import com.javadb.catalog.DatabaseTables;
 import com.javadb.parsers.SelectQueryParser;
 import com.javadb.queries.SelectQuery;
 import com.javadb.tables.Table;
@@ -14,7 +15,7 @@ import java.util.List;
 public class SelectQueryProcessor {
     SelectQuery selectQuery;
 
-    SelectQueryProcessor(String selectStatement) {
+    public SelectQueryProcessor(String selectStatement) {
         this.selectQuery = SelectQueryParser.parse(selectStatement);
         process();
     }
@@ -22,6 +23,13 @@ public class SelectQueryProcessor {
     private void process() {
         if (selectQuery != null) {
             try {
+                DatabaseTables tablesCatalog = new DatabaseTables();
+                boolean isPresent = tablesCatalog.isTablePresent(selectQuery.getTableName());
+                if (!isPresent) {
+                    System.out.println("Table " + selectQuery.getTableName() + " not present");
+                    return;
+                }
+                tablesCatalog.close();
                 Table table = new Table(selectQuery.getTableName());
                 DatabaseColumns columnCatalog = new DatabaseColumns();
                 TableColumn[] columns = columnCatalog.getColumnTypes(selectQuery.getTableName());
@@ -41,6 +49,7 @@ public class SelectQueryProcessor {
                 table.close();
                 print(cells, columns);
             } catch(Exception e) {
+                e.printStackTrace();
                 System.out.println("Something went wrong while processing select query");
             }
         }
@@ -56,11 +65,19 @@ public class SelectQueryProcessor {
     }
 
     private void print(List<LeafCell> cells, TableColumn[] columns) {
+        System.out.print("| ");
+        int headerLength = 2;
         for (TableColumn column: columns) {
-            printColumn(column.getColumnName(), column.getDataType());
+            headerLength += printColumn(column.getColumnName(), column.getDataType());
+        }
+        System.out.print("\n");
+        while (headerLength > 0) {
+            System.out.print("_");
+            headerLength--;
         }
         System.out.print("\n");
         for (LeafCell cell: cells) {
+            System.out.print("| ");
             for (Value val: cell.getValues()) {
                 printColumn(val.toString(), val.getType());
             }
@@ -68,8 +85,7 @@ public class SelectQueryProcessor {
         }
     }
 
-    private void printColumn(String data, DataType type) {
-        System.out.print("| ");
+    private int printColumn(String data, DataType type) {
         System.out.print(data);
         int offset = type.getPrintOffset() - data.length();
         StringBuilder tail = new StringBuilder();
@@ -77,7 +93,8 @@ public class SelectQueryProcessor {
             tail.append(" ");
             offset--;
         }
-        tail.append(" |");
+        tail.append(" | ");
         System.out.print(tail);
+        return (type.getPrintOffset() + 3);
     }
 }

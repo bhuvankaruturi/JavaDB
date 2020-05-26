@@ -13,7 +13,7 @@ import static com.javadb.types.DataType.*;
 
 public class DatabaseColumns {
     public static final String tableName = "database_columns";
-    public static final String createQuery = "CREATE TABLE database_columns (rowid INT PRIMARY KEY, table_name TEXT, column_name TEXT, data_type TEXT, ordinal_position TINYINT, is_nullable TEXT)";
+    public static final String createQuery = "CREATE TABLE database_columns (rowid INT PRIMARY KEY, table_name TEXT, column_name TEXT, data_type TEXT, ord_pos TINYINT, is_nullable TEXT)";
     public static final DataType[] types = {INT, TEXT, TEXT, TEXT, TINYINT, TEXT};
     private final Table table;
 

@@ -35,7 +35,7 @@ public class CreateQueryParser {
                 if (columnDetails.length >= 3) {
                     StringBuilder constraint = new StringBuilder();
                     for (int j = 2; j < columnDetails.length; j++)
-                        constraint.append(columnDetails[i]).append(" ");
+                        constraint.append(columnDetails[j]).append(" ");
                     constraints[i] = constraint.toString().trim().toLowerCase();
                 }
                 else
