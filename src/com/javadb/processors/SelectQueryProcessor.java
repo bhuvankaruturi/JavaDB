@@ -48,6 +48,7 @@ public class SelectQueryProcessor {
                 }
                 table.close();
                 print(cells, columns);
+                System.out.println("found " + cells.size() + " row(s)");
             } catch(Exception e) {
                 e.printStackTrace();
                 System.out.println("Something went wrong while processing select query");

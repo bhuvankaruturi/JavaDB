@@ -47,7 +47,9 @@ public class Table {
         List<LeafCell> cells = new ArrayList<>();
         while(page != null) {
             for (TableCell tableCell: page.tableCells) {
-                cells.add((LeafCell)tableCell.getCell());
+                LeafCell lCell = (LeafCell)tableCell.getCell();
+                if (lCell.isDeleted()) continue;
+                cells.add(lCell);
             }
             page = page.getNextPage();
         }
@@ -67,6 +69,7 @@ public class Table {
         while(page != null) {
             for (TableCell tableCell: page.tableCells) {
                 LeafCell lCell = (LeafCell)tableCell.getCell();
+                if (lCell.isDeleted()) continue;
                 if (lCell.getValues()[ordinalVal].equals(val)) cells.add(lCell);
             }
             page = page.getNextPage();
@@ -86,6 +89,7 @@ public class Table {
         while(page != null) {
             for (TableCell tableCell: page.tableCells) {
                 LeafCell lCell = (LeafCell)tableCell.getCell();
+                if (lCell.isDeleted()) continue;
                 if (lCell.getValues()[ordinalVal].equals(val)) return true;
             }
             page = page.getNextPage();
@@ -106,6 +110,7 @@ public class Table {
         while(page != null) {
             for (int i = 0; i < page.tableCells.size(); i++) {
                 LeafCell lCell = (LeafCell)page.tableCells.get(i).getCell();
+                if (lCell.isDeleted()) continue;
                 if (lCell.getValues()[ordinalVal].equals(val)) {
                     page.deleteCell(i, 1);
                     count++;

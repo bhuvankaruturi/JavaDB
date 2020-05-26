@@ -125,7 +125,7 @@ public class LeafPage extends Page {
         int offset = tableCells.get(index).offset;
         LeafCell cell = new LeafCell(getStart() + offset, tableFile);
         if(!cell.deleted) cell.delete(offset + getStart(), tableFile, mode);
-        updateHeaderOnCellDeletion(index);
+        if (mode == 0) updateHeaderOnCellDeletion(index);
     }
 
     /**
