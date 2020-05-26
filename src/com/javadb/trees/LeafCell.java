@@ -36,6 +36,7 @@ public class LeafCell extends Cell {
 
     // constructor
     public LeafCell(int key, short payloadSize, byte numCols, Value[] values, boolean deleted) {
+        this.key = key;
         this.payloadSize = payloadSize;
         this.numCols = numCols;
         this.values = values;

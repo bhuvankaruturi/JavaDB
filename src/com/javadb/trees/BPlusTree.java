@@ -49,6 +49,14 @@ public class BPlusTree {
     }
 
     /**
+     * @return int, max row id in the tree
+     * @throws IOException
+     */
+    public int getMaxRowId() throws IOException {
+        return root.getMaxRowId();
+    }
+
+    /**
      * @return the first leaf page from left in the tree
      * @throws IOException while accessing the tableFile
      */

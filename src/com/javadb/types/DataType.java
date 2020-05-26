@@ -6,27 +6,29 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public enum DataType {
-    NULL ((byte)0x00, (short)0, "null"),
-    TINYINT((byte)0x01, (short)1, "tinyint"),
-    SMALLINT ((byte)0x02, (short)2, "smallint"),
-    INT ((byte)0x03, (short)4, "int"),
-    BIGINT((byte)0x04, (short)8, "bigint"),
-    LONG((byte)0x04, (short)8, "long"),
-    FLOAT((byte)0x05, (short)4, "float"),
-    DOUBLE((byte)0x06, (short)8, "double"),
-    YEAR((byte)0x08, (short)2, "year"),
-    DATETIME((byte)0x0A, (short)8, "datetime"),
-    DATE((byte)0x0B, (short)8, "date"),
-    TEXT((byte)0x0C, (short)0, "text");
+    NULL ((byte)0x00, (short)0, "null", 8),
+    TINYINT((byte)0x01, (short)1, "tinyint", 8),
+    SMALLINT ((byte)0x02, (short)2, "smallint", 8),
+    INT ((byte)0x03, (short)4, "int", 10),
+    BIGINT((byte)0x04, (short)8, "bigint", 14),
+    LONG((byte)0x04, (short)8, "long", 14),
+    FLOAT((byte)0x05, (short)4, "float", 15),
+    DOUBLE((byte)0x06, (short)8, "double", 16),
+    YEAR((byte)0x08, (short)2, "year", 6),
+    DATETIME((byte)0x0A, (short)8, "datetime", 16),
+    DATE((byte)0x0B, (short)8, "date", 12),
+    TEXT((byte)0x0C, (short)0, "text", 25);
 
     private final byte serialCode;
     private final short size;
     private final String name;
+    private final int printOffset;
 
-    DataType(byte serialCode, short size, String name) {
+    DataType(byte serialCode, short size, String name, int printOffset) {
         this.size = size;
         this.name = name;
         this.serialCode = serialCode;
+        this.printOffset = printOffset;
     }
 
     public byte getSerialCode() {
@@ -44,7 +46,11 @@ public enum DataType {
         return size;
     }
 
-    byte[] stringToByteArr(String data) {
+    public int getPrintOffset() {
+        return printOffset;
+    }
+
+    public byte[] stringToByteArr(String data) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(this.getSize(data));
         if (this.getSerialCode() > 0x0C) {
             byteBuffer.put(data.getBytes());
@@ -95,9 +101,9 @@ public enum DataType {
                         throw new IllegalArgumentException("Invalid datatype");
                 }
             }
-            catch (ParseException e) {
+            catch (NumberFormatException | ParseException e) {
                 System.out.println("invalid data");
-                e.printStackTrace();
+                return null;
             }
         }
         byteBuffer.position(0);
