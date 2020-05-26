@@ -5,12 +5,11 @@ import java.io.RandomAccessFile;
 
 public class FileHandler {
 
-    static String path = "../data/";
-    static String mode = "rw";
+    static String path = "data/";
 
-    static RandomAccessFile open(String fileName, String extension) {
+    static RandomAccessFile open(String fileName) {
         try {
-            return new RandomAccessFile(path + fileName + "." + extension, "rw");
+            return new RandomAccessFile(path + fileName + "." + Table.extension, "rw");
         }
         catch(Exception e) {
             e.printStackTrace();

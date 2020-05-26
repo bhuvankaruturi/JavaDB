@@ -36,9 +36,12 @@ public class LeafPage extends Page {
      */
     void setCells() throws IOException {
         tableFile.seek(getStart() + headerLength);
+        short[] cellOffsets = new short[cellCount];
         for (int i = 0; i < cellCount; i++) {
-            short offset = tableFile.readShort();
-            TableCell tableCell = new TableCell(new LeafCell(offset + getStart(), tableFile), offset);
+            cellOffsets[i] = tableFile.readShort();
+        }
+        for (int i = 0; i < cellCount; i++) {
+            TableCell tableCell = new TableCell(new LeafCell(cellOffsets[i] + getStart(), tableFile), cellOffsets[i]);
             tableCells.add(tableCell);
         }
     }

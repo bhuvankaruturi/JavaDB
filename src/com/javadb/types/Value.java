@@ -40,4 +40,9 @@ public class Value {
     public boolean equals(@NotNull Value v) {
         return Arrays.equals(data, v.data);
     }
+
+    @Override
+    public String toString() {
+        return this.type.byteArrToString(data);
+    }
 }

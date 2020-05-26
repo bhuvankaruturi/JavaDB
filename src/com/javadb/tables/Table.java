@@ -25,7 +25,7 @@ public class Table {
     // if the table file is not present
     public Table(String tableName) throws IOException {
         this.tableName = tableName;
-        this.tableFile = FileHandler.open(tableName, extension);
+        this.tableFile = FileHandler.open(tableName);
         assert tableFile != null;
         this.tree = new BPlusTree(pageSize, tableFile);
     }
@@ -74,6 +74,32 @@ public class Table {
         return cells;
     }
 
+    /**
+     * Check whether the table has the given value in the column specified by ordinalVal
+     * @param ordinalVal int, column ordinal value
+     * @param val Value, value to search for
+     * @return boolean, if the value is found
+     * @throws IOException if the tableFile is not accessible
+     */
+    public boolean hasValue(int ordinalVal, Value val) throws IOException {
+        LeafPage page = tree.getFirstLeafPage();
+        while(page != null) {
+            for (TableCell tableCell: page.tableCells) {
+                LeafCell lCell = (LeafCell)tableCell.getCell();
+                if (lCell.getValues()[ordinalVal].equals(val)) return true;
+            }
+            page = page.getNextPage();
+        }
+        return false;
+    }
+
+    /**
+     * Delete cells from table, which contain val in the column specified by ordinalVal
+     * @param ordinalVal int, column ordinal value
+     * @param val Value, value to search for
+     * @return int, number of rows deleted
+     * @throws IOException if the tableFile is not accessible
+     */
     public int deleteByValue(int ordinalVal, Value val) throws IOException {
         LeafPage page = tree.getFirstLeafPage();
         int count = 0;
@@ -88,6 +114,14 @@ public class Table {
             page = page.getNextPage();
         }
         return count;
+    }
+
+    /**
+     * @return int, max row id in the table
+     * @throws IOException
+     */
+    public int getMaxRowId() throws IOException {
+        return tree.getMaxRowId();
     }
 
     /**
