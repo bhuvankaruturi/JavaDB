@@ -6,6 +6,13 @@ public class CreateQuery {
     String[] columnTypes;
     String[] constraints;
 
+    /**
+     * Constructor for create table statement wrapper
+     * @param tableName String, table name
+     * @param columnNames String[], column names
+     * @param columnTypes String[], column types
+     * @param constraints String[], constraints on columns
+     */
     public CreateQuery(String tableName, String[] columnNames, String[] columnTypes, String[] constraints) {
         this.tableName = tableName;
         this.columnNames = columnNames;

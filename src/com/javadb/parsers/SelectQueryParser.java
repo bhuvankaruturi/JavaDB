@@ -6,11 +6,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SelectQueryParser {
+    // regex for the select with where clause query
     private final static Pattern selectWithWhere =
             Pattern.compile("(^select\\s\\*\\sfrom\\s(?<name>\\w+?))(\\swhere\\s(?<whr>.*?))?$", Pattern.CASE_INSENSITIVE);
+    // regex for the where clause within a select query
     private final static Pattern wherePattern = Pattern.compile("(?<col>\\w+?)\\s(?<op>[=<>])\\s(?<val>(\".*?\")|(\\d+))");
 
-    public static SelectQuery parse(String selectQuery, long pageSize) {
+    /**
+     * parses a string and return a SelectQuery object
+     * @param selectQuery string to be parsed
+     * @return SelectQuery object which wraps the parsed query
+     */
+    public static SelectQuery parse(String selectQuery) {
         Matcher match = selectWithWhere.matcher(selectQuery);
         if (match.matches()) {
             String tableName = match.group("name").trim().toLowerCase();

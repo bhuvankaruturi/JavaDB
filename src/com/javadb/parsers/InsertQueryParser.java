@@ -6,9 +6,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InsertQueryParser {
+    // regex for the insert query
     private final static Pattern insertRegex = Pattern.compile("^insert\\sinto\\s(?<name>\\w+?)\\svalues\\s\\((?<vals>.*?)\\)$", Pattern.CASE_INSENSITIVE);
 
-    public static InsertQuery parse(String insertQuery, long pageSize) {
+    /**
+     * parses a string and returns a InsertQuery object
+     * @param insertQuery string to be parsed
+     * @return InsertQuery object which wraps the parsed query
+     */
+    public static InsertQuery parse(String insertQuery) {
         Matcher match = insertRegex.matcher(insertQuery);
         if (match.matches()) {
             String tableName = match.group("name").trim().toLowerCase();
