@@ -17,7 +17,7 @@ public class FileHandler {
         }
     }
 
-    static boolean delete(String fileName, String extension) {
+    public static boolean delete(String fileName, String extension) {
         try {
             return  new File(path + fileName + "." + extension).delete();
         }

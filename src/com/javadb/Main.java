@@ -2,6 +2,7 @@ package com.javadb;
 
 import com.javadb.catalog.Bootstrap;
 import com.javadb.processors.CreateQueryProcessor;
+import com.javadb.processors.DropQueryProcessor;
 import com.javadb.processors.InsertQueryProcessor;
 import com.javadb.processors.SelectQueryProcessor;
 
@@ -144,6 +145,9 @@ public class Main {
             case "create":
                 parseCreateTable(userCommand);
                 break;
+            case "drop":
+                parseDropTable(userCommand);
+                break;
             case "show":
                 parseShowTable(userCommand);
                 break;
@@ -177,6 +181,14 @@ public class Main {
      */
     public static void parseQuery(String queryString) {
         new SelectQueryProcessor(queryString);
+    }
+
+    /**
+     *  method for handling drop table statement
+     * @param dropStatement is a String of the user input
+     */
+    private static void parseDropTable(String dropStatement) {
+        new DropQueryProcessor(dropStatement);
     }
 
     /**
