@@ -8,7 +8,10 @@ public class Bootstrap {
     public static boolean initialized = false;
     public static void init() {
         boolean hasTables = initializeDataDir();
-        if (hasTables) return;
+        if (hasTables) { 
+            initialized = true; 
+            return;
+        }
         cleanDataDir();
         new CreateQueryProcessor(DatabaseTables.createQuery);
         new CreateQueryProcessor(DatabaseColumns.createQuery);
